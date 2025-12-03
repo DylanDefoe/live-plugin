@@ -1,0 +1,5 @@
+{
+  "usingComponents": {
+		"live-plugin": "plugin://live-plugin/live-plugin"
+  }
+}
