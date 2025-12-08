@@ -1,4 +1,4 @@
-import { showToast } from "../../utils/interactive"
+import { toast } from "../../wx-utils/native"
 
 // plugin/components/live-player/live-player.js
 Component({
@@ -60,7 +60,7 @@ Component({
 
   observers: {
     errorMessage: (errorMessage) => {
-      showToast(errorMessage)
+      toast(errorMessage)
     },
   },
 

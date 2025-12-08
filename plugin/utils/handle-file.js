@@ -1,4 +1,4 @@
-import { hideLoading, showLoading } from './interactive'
+import { hideLoading, loading } from '../wx-utils/native'
 
 /**
  * 下载文件
@@ -11,7 +11,7 @@ export const downloadFile = (url, options = {}) => {
     console.error('下载地址必传')
     return
   }
-  showLoading()
+  loading('下载中')
   return new Promise((resolve, reject) => {
     wx.downloadFile({
       url,

@@ -2,7 +2,7 @@
 import * as alivc from '../../lib/alivc-im'
 import { getToken, sendMessage } from '../../service/index'
 import { getUUID } from '../../utils/common'
-import { showToast } from '../../utils/interactive'
+import { toast } from '../../wx-utils/native'
 
 const { ImEngine, ImLogLevel } = alivc
 
@@ -309,7 +309,7 @@ Component({
     onSendMessage: async function () {
       const content = (this.data.inputValue || '').trim()
       if (!content) {
-        showToast('输入内容为空，请重新输入')
+        toast('输入内容为空，请重新输入')
         return
       }
       try {
