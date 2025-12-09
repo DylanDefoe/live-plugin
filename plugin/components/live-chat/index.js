@@ -62,9 +62,17 @@ Component({
 
     messageList: [], // 消息列表
     inputValue: '', // 输入框内容
+    placeholderText: '请先登录', // 输入框提示文案
     scrollTop: 0, // 消息容器纵向滚动
   },
-
+  observers: {
+    // 监听 isLoggedIn 变化，自动更新 placeholderText
+    isLoggedIn: function (isLoggedIn) {
+      this.setData({
+        placeholderText: isLoggedIn ? '说点什么...' : '请先登录',
+      })
+    },
+  },
   lifetimes: {
     created: function () {
       // MOCK以下4个方法  插件不支持但是IM SDK使用了
@@ -116,7 +124,7 @@ Component({
     // 初始化IM系统
     initializeIM: async function () {
       if (!imConfig.appId || !imConfig.appSign) {
-        console.error('IM配置不完整: 缺少appId或appSign')
+        toast('IM配置不完整: 缺少appId或appSign')
         return
       }
 
@@ -153,10 +161,11 @@ Component({
         this.messageManager = await imEngine.getMessageManager()
         // 设置事件监听器
         this.setupListeners()
-        // 登录
+        // 登录IM
         this.login()
       } catch (error) {
         console.error('IM SDK初始化失败:', error)
+        toast('IM SDK初始化失败:' + error?.message)
       }
     },
 
@@ -172,6 +181,7 @@ Component({
       // 连接错误事件
       this.imEngine.on('connectfailed', (error) => {
         console.error('IM连接错误:', error)
+        toast('IM连接错误' + error?.message)
         this.setData({ isConnected: false })
         this.triggerEvent('connectfailed', { error })
       })
@@ -179,7 +189,7 @@ Component({
       // 连接断开事件
       this.imEngine.on('disconnect', () => {
         console.log('IM连接断开')
-        this.setData({ isConnected: false })
+        this.setData({ isConnected: false, isLoggedIn: false })
         this.triggerEvent('disconnect')
       })
 
@@ -231,19 +241,19 @@ Component({
     // 登录IM系统
     login: async function () {
       if (!this.data.isInitialized) {
-        console.error('IM系统未初始化')
+        toast('IM系统未初始化')
         return
       }
       try {
         const authInfo = this.authInfo
         if (!authInfo) {
-          console.error('没有认证信息')
+          toast('没有认证信息')
           return
         }
 
         const { userInfo } = this.properties
         if (!userInfo.user_id) {
-          console.error('用户信息不完整，缺少userId')
+          toast('用户信息不完整，缺少userId')
           return
         }
         await this.imEngine.login({
@@ -268,6 +278,7 @@ Component({
         this.enterGroup()
       } catch (error) {
         console.error('IM登录失败:', error)
+        toast('IM登录失败' + error?.message)
       }
     },
 
@@ -275,7 +286,7 @@ Component({
     enterGroup: async function () {
       const groupId = this.properties.groupId
       if (!groupId) {
-        console.error('群组ID不能为空')
+        toast('群组ID不能为空')
         return
       }
       try {
@@ -286,6 +297,7 @@ Component({
         this.getLatestMessageList()
       } catch (error) {
         console.error('进入群组失败:', error)
+        toast('进入群组失败' + error?.message)
         this.triggerEvent('entergroupfailed', {
           groupId,
           error: error,
@@ -314,10 +326,10 @@ Component({
       }
       try {
         // 发送聊天消息（到IM）
-        this.messageManager.sendGroupMessage({
+        await this.messageManager.sendGroupMessage({
           groupId: this.properties.groupId,
           data: JSON.stringify({ content }),
-          type: 88888,
+          type: 88888, // 自定义消息类型
         })
         // 发送聊天消息（到后端）
         sendMessage({
@@ -329,6 +341,7 @@ Component({
         })
       } catch (error) {
         console.error('发送消息失败:', error)
+        toast('发送消息失败:' + error?.message)
       }
       // 清空输入框
       this.setData({ inputValue: '' })
